@@ -60,8 +60,10 @@ public class FractalPanel extends JPanel {
                 lastX = e.getX();
                 lastY = e.getY();
 
-                renderFractal();
-                repaint();
+                new Thread(() -> {
+                    renderFractal();
+                    repaint();
+                }).start();
             }
         });
 
@@ -72,19 +74,19 @@ public class FractalPanel extends JPanel {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        double centerRe = minRe + px * (maxRe - minRe) / width;
-        double centerIm = minIm + py * (maxIm - minIm) / height;
+        double mouseRe = minRe + px * (maxRe - minRe) / width;
+        double mouseIm = minIm + py * (maxIm - minIm) / height;
 
-        double newWidth = (maxRe - minRe) * zoomFactor;
-        double newHeight = (maxIm - minIm) * zoomFactor;
+        minRe = mouseRe + (minRe - mouseRe) * zoomFactor;
+        maxRe = mouseRe + (maxRe - mouseRe) * zoomFactor;
 
-        minRe = centerRe - newWidth / 2;
-        maxRe = centerRe + newWidth / 2;
-        minIm = centerIm - newHeight / 2;
-        maxIm = centerIm + newHeight / 2;
+        minIm = mouseIm + (minIm - mouseIm) * zoomFactor;
+        maxIm = mouseIm + (maxIm - mouseIm) * zoomFactor;
 
-        renderFractal();
-        repaint();
+        new Thread(() -> {
+            renderFractal();
+            repaint();
+        }).start();
     }
 
     private void renderFractal() {
