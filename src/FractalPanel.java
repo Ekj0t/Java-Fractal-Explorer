@@ -6,6 +6,8 @@ import java.awt.event.MouseEvent;
 
 public class FractalPanel extends JPanel {
 
+    private final int THREADS = Runtime.getRuntime().availableProcessors();
+
     private BufferedImage image;
 
     private int lastX;
@@ -60,10 +62,7 @@ public class FractalPanel extends JPanel {
                 lastX = e.getX();
                 lastY = e.getY();
 
-                new Thread(() -> {
-                    renderFractal();
-                    repaint();
-                }).start();
+                renderAsync();
             }
         });
 
@@ -83,10 +82,7 @@ public class FractalPanel extends JPanel {
         minIm = mouseIm + (minIm - mouseIm) * zoomFactor;
         maxIm = mouseIm + (maxIm - mouseIm) * zoomFactor;
 
-        new Thread(() -> {
-            renderFractal();
-            repaint();
-        }).start();
+        renderAsync();
     }
 
     private void renderFractal() {
@@ -94,25 +90,58 @@ public class FractalPanel extends JPanel {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        int maxIter = 200;
 
-                double c_re = minRe + x * (maxRe - minRe) / width;
-                double c_im = minIm + y * (maxIm - minIm) / height;
+        Thread[] threads = new Thread[THREADS];
 
-                int iter = Mandelbrot.getIterations(c_re, c_im, maxIter);
+        int rowsPerThread = height / THREADS;
 
-                int color;
+        for (int t = 0; t < THREADS; t++) {
 
-                if (iter == maxIter) {
-                    color = Color.BLACK.getRGB();
-                } else {
-                    color = Color.HSBtoRGB(iter / 256f, 1, iter / (iter + 8f));
+            int startY = t * rowsPerThread;
+            int endY = (t == THREADS - 1) ? height : startY + rowsPerThread;
+
+            threads[t] = new Thread(() -> {
+
+                for (int x = 0; x < width; x++) {
+
+                    for (int y = startY; y < endY; y++) {
+
+                        double c_re = minRe + x * (maxRe - minRe) / width;
+                        double c_im = minIm + y * (maxIm - minIm) / height;
+
+                        int iter = Mandelbrot.getIterations(c_re, c_im, maxIter);
+
+                        int color;
+
+                        if (iter == maxIter) {
+                            color = Color.BLACK.getRGB();
+                        } else {
+                            color = Color.HSBtoRGB(iter / 256f, 1, iter / (iter + 8f));
+                        }
+
+                        image.setRGB(x, y, color);
+                    }
                 }
 
-                image.setRGB(x, y, color);
-            }
+            });
+
+            threads[t].start();
         }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException ignored) {}
+        }
+    }
+
+    private void renderAsync() {
+
+        new Thread(() -> {
+            renderFractal();
+            repaint();
+        }).start();
     }
 
     @Override
