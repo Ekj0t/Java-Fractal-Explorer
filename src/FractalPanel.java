@@ -8,7 +8,11 @@ public class FractalPanel extends JPanel {
 
     private final int THREADS = Runtime.getRuntime().availableProcessors();
 
+    private int[][] iterations;
+
     private BufferedImage image;
+
+    private float colorOffset = 0f;
 
     private int lastX;
     private int lastY;
@@ -26,6 +30,8 @@ public class FractalPanel extends JPanel {
         int height = 800;
 
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        iterations = new int[image.getWidth()][image.getHeight()];
 
         renderFractal();
 
@@ -65,6 +71,9 @@ public class FractalPanel extends JPanel {
                 renderAsync();
             }
         });
+
+//        startPaletteCycling();
+        startColorAnimation();
 
     }
 
@@ -117,10 +126,11 @@ public class FractalPanel extends JPanel {
                         if (iter == maxIter) {
                             color = Color.BLACK.getRGB();
                         } else {
-                            color = Color.HSBtoRGB(iter / 256f, 1, iter / (iter + 8f));
+                            float hue = ((iter / 256f) + colorOffset) % 1.0f;
+                            color = Color.HSBtoRGB(hue, 1f, iter / (iter + 8f));
                         }
 
-                        image.setRGB(x, y, color);
+                        iterations[x][y] = iter;
                     }
                 }
 
@@ -144,9 +154,64 @@ public class FractalPanel extends JPanel {
         }).start();
     }
 
+//    private void startPaletteCycling() {
+//
+//        new Thread(() -> {
+//
+//            while (true) {
+//
+//                colorOffset += 0.01f;
+//
+//                repaint();
+//
+//                try {
+//                    Thread.sleep(40);
+//                } catch (InterruptedException ignored) {}
+//            }
+//
+//        }).start();
+//    }
+
+    private void startColorAnimation() {
+
+        new Thread(() -> {
+
+            while (true) {
+
+                colorOffset += 0.002f;
+
+                repaint();
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored) {}
+            }
+
+        }).start();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+
+                int iter = iterations[x][y];
+
+                int color;
+
+                if (iter == maxIter) {
+                    color = Color.BLACK.getRGB();
+                } else {
+
+                    float hue = ((iter / 256f) + colorOffset) % 1f;
+                    color = Color.HSBtoRGB(hue, 1f, iter / (iter + 8f));
+                }
+
+                image.setRGB(x, y, color);
+            }
+        }
+
         g.drawImage(image, 0, 0, null);
     }
 }
