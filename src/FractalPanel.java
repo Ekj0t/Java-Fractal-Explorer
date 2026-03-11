@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -9,6 +11,8 @@ public class FractalPanel extends JPanel {
     private final int THREADS = Runtime.getRuntime().availableProcessors();
 
     private int[][] iterations;
+
+    private boolean colorCycling = true;
 
     private BufferedImage image;
 
@@ -69,6 +73,22 @@ public class FractalPanel extends JPanel {
                 lastY = e.getY();
 
                 renderAsync();
+            }
+        });
+
+        setFocusable(true);
+
+        addKeyListener(new KeyAdapter() {
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+                if (e.getKeyCode() == KeyEvent.VK_C) {
+
+                    colorCycling = !colorCycling;
+
+                    repaint();
+                }
             }
         });
 
@@ -178,9 +198,10 @@ public class FractalPanel extends JPanel {
 
             while (true) {
 
-                colorOffset += 0.002f;
-
-                repaint();
+                if (colorCycling) {
+                    colorOffset += 0.002f;
+                    repaint();
+                }
 
                 try {
                     Thread.sleep(50);
