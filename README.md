@@ -7,6 +7,12 @@ The renderer uses **multithreaded computation** to generate fractals efficiently
 
 ---
 
+## Demo
+
+![Fluid Simulation Demo](fractal.gif)
+
+---
+
 ## Features
 
 * Interactive **Mandelbrot set visualization**
