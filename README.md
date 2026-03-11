@@ -9,7 +9,7 @@ The renderer uses **multithreaded computation** to generate fractals efficiently
 
 ## Demo
 
-![Fluid Simulation Demo](fractal.gif)
+![Fractal explorer Demo](fractal.gif)
 
 ---
 
