@@ -1,0 +1,85 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class FractalPanel extends JPanel {
+
+    private BufferedImage image;
+
+    private double minRe = -2;
+    private double maxRe = 2;
+    private double minIm = -2;
+    private double maxIm = 2;
+
+    private int maxIter = 200;
+
+    public FractalPanel() {
+
+        int width = 800;
+        int height = 800;
+
+        image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        renderFractal();
+
+        addMouseWheelListener(e -> {
+            double zoomFactor = (e.getPreciseWheelRotation() > 0) ? 1.2 : 0.8;
+            zoomAt(e.getX(), e.getY(), zoomFactor);
+        });
+
+    }
+
+    private void zoomAt(int px, int py, double zoomFactor) {
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        double centerRe = minRe + px * (maxRe - minRe) / width;
+        double centerIm = minIm + py * (maxIm - minIm) / height;
+
+        double newWidth = (maxRe - minRe) * zoomFactor;
+        double newHeight = (maxIm - minIm) * zoomFactor;
+
+        minRe = centerRe - newWidth / 2;
+        maxRe = centerRe + newWidth / 2;
+        minIm = centerIm - newHeight / 2;
+        maxIm = centerIm + newHeight / 2;
+
+        renderFractal();
+        repaint();
+    }
+
+    private void renderFractal() {
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+
+                double c_re = minRe + x * (maxRe - minRe) / width;
+                double c_im = minIm + y * (maxIm - minIm) / height;
+
+                int iter = Mandelbrot.getIterations(c_re, c_im, maxIter);
+
+                int color;
+
+                if (iter == maxIter) {
+                    color = Color.BLACK.getRGB();
+                } else {
+                    color = Color.HSBtoRGB(iter / 256f, 1, iter / (iter + 8f));
+                }
+
+                image.setRGB(x, y, color);
+            }
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(image, 0, 0, null);
+    }
+}
