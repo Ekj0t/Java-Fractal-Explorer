@@ -8,6 +8,9 @@ public class FractalPanel extends JPanel {
 
     private BufferedImage image;
 
+    private int lastX;
+    private int lastY;
+
     private double minRe = -2;
     private double maxRe = 2;
     private double minIm = -2;
@@ -27,6 +30,39 @@ public class FractalPanel extends JPanel {
         addMouseWheelListener(e -> {
             double zoomFactor = (e.getPreciseWheelRotation() > 0) ? 1.2 : 0.8;
             zoomAt(e.getX(), e.getY(), zoomFactor);
+        });
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                lastX = e.getX();
+                lastY = e.getY();
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+
+                int dx = e.getX() - lastX;
+                int dy = e.getY() - lastY;
+
+                double scaleRe = (maxRe - minRe) / image.getWidth();
+                double scaleIm = (maxIm - minIm) / image.getHeight();
+
+                minRe -= dx * scaleRe;
+                maxRe -= dx * scaleRe;
+
+                minIm -= dy * scaleIm;
+                maxIm -= dy * scaleIm;
+
+                lastX = e.getX();
+                lastY = e.getY();
+
+                renderFractal();
+                repaint();
+            }
         });
 
     }
